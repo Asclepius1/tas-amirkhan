@@ -63,7 +63,7 @@ def get_data_from_amo_by_id(type: Literal['leads', 'contacts', 'companies'], id:
 def inserting_data_into_amo(data: dict, lead_id: str):
     doc_url = data['data']['url']
     doc_id = data['data']['id']
-
+    print('начали вставку данных в сделку амо')
     url = f"{api_url_amo}/api/v4/leads/{lead_id}"
     data = {
         "custom_fields_values":[
@@ -86,11 +86,13 @@ def inserting_data_into_amo(data: dict, lead_id: str):
         ]
     }
     headers = {"Authorization": f"Bearer {api_token_amo}"}
+    print('запрос отправлен')
     try:
         response = requests.patch(url, headers=headers, json=data)
         response.raise_for_status()
         return response.text
     except requests.exceptions.HTTPError as exc:
+        print(f'запрос не дошел успешно {exc.response.text}')
         raise HTTPException(status_code=exc.response.status_code, detail=f"Ошибка запроса: {exc.response.text}")
 
 
@@ -197,7 +199,7 @@ def trustme_upload_with_file_url(
     bearer_token = trustme_bearer_token
     # url = 'https://private-anon-8fb911b817-trustmekz.apiary-mock.com/trust_contract_public_apis/UploadWithFileURL'
     url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
-
+    print('check - trustme upload start')
     values = {
     "downloadURL": file_url,
     "KzBmg": False,
@@ -205,17 +207,18 @@ def trustme_upload_with_file_url(
     "requisites": [get_trustme_data_by_lead_id(lead_id)],
     "contractName": "test"
     }
-
+    print('получили ревизиты')
     headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer {}'.format(bearer_token)
     }
 
     response = requests.post(url, json=values, headers=headers)
-    
+    print('запрос на создание файл отправлен')
     # print(response.json())
     data = response.json()
     if not data:
+        print('нету данных для вставки')
         return JSONResponse(content={"message": "Не получилось получить данные с trustme"}, status_code=500)
     return inserting_data_into_amo(data, lead_id)
 

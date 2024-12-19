@@ -40,4 +40,4 @@ async def amo_webhook(request: Request):
         trustme_upload_with_file_url(lead_id)
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
     except:
-        return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=500)
+        return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
