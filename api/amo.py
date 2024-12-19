@@ -30,6 +30,7 @@ async def check(request: Request):
 
 @router.post("/webhook")
 async def amo_webhook(request: Request):
+    print(request)
     try:
         data = await request.form()
         print(data)
@@ -37,7 +38,7 @@ async def amo_webhook(request: Request):
         lead_id = str(data_dict.get('leads[add][0][id]', ''))
         print(data_dict)
         if not lead_id:
-            return JSONResponse(content={"message": "Не получилось получить lead_id"}, status_code=500)
+            return JSONResponse(content={"message": "Не получилось получить lead_id"}, status_code=501)
         trustme_upload_with_file_url(lead_id)
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
     except:
