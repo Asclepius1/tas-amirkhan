@@ -28,6 +28,6 @@ def test():
  
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="localhost", reload=True)
+    uvicorn.run("main:app", host="91.147.92.141", reload=True)
 
 
