@@ -32,6 +32,7 @@ async def check(request: Request):
 async def amo_webhook(request: Request):
     try:
         data = await request.form()
+        print(data)
         data_dict = dict(data)
         lead_id = str(data_dict.get('leads[add][0][id]', ''))
         print(data_dict)
