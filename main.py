@@ -19,7 +19,8 @@ load_dotenv(dotenv_path=dotenv_path)
 
 amo_api = os.getenv("AMO_API")
 trustme_bearer_token = os.getenv("TRUSTME_API")
-app = FastAPI(api_router)
+app = FastAPI()
+app.include_router(api_router)
 
 
 @app.get("/")
@@ -28,6 +29,7 @@ def test():
  
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="91.147.92.141", reload=True)
+    # uvicorn.run("main:app", host="91.147.92.141", reload=True)
+    uvicorn.run("main:app", host="localhost", reload=True)
 
 
