@@ -154,7 +154,7 @@ def tern_off_button(lead_id: str) -> dict:
 
 
 #--------trustme-----------
-def get_trustme_data_by_lead_id(lead_id: str = '23682805') -> dict:
+def get_trustme_data_by_lead_id(lead_id: str) -> dict:
     raw_data = get_data_from_amo_by_id('leads', lead_id)
     companies_id = raw_data['_embedded']['companies'][0]['id']
     contacts_id = raw_data['_embedded']['contacts'][0]['id']
@@ -190,7 +190,7 @@ def get_trustme_data_by_lead_id(lead_id: str = '23682805') -> dict:
 
 
 def trustme_upload_with_file_url(
-        lead_id: str = '23682805', 
+        lead_id: str, 
         file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/c329ce74-0eaf-4b55-a6e2-3c2c81a175b4/DOGOVOR-na-vnedrenie-2.docx"
         ) -> str:
     # file_url = ""
