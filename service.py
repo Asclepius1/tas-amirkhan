@@ -248,9 +248,9 @@ def trustme_set_webhook():
 
 
 if __name__ == "__main__":
-    print(trustme_upload_with_file_url('23682805'))
+    # print(trustme_upload_with_file_url('23682805'))
     # trustme_set_webhook()
     # data = search_lead_by_doc_id("wriuphbzi")
     # data['_embedded']['leads'][0]['id']
-    # change_lead_pipline_by_doc_status(23682805, 3)
+    change_lead_pipline_by_doc_status(23682805, 3)
     pass
