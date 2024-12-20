@@ -35,11 +35,11 @@ async def amo_webhook(request: Request):
     try:
         data = await request.form()
         data_dict = dict(data)
-        print(data_dict)
-        lead_id = str(data_dict.get('leads[add][0][id]', ''))
-        print(lead_id)
+        lead_id = str(data_dict.get('leads[status][0][id]', ''))
         if not lead_id:
-            return JSONResponse(content={"message": "Не получилось получить lead_id"}, status_code=501)
+            lead_id = str(data_dict.get('leads[add][0][id]', ''))
+            if not lead_id:
+                return JSONResponse(content={"message": "Не получилось получить lead_id"}, status_code=404)
         trustme_upload_with_file_url(lead_id)
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
     except:
