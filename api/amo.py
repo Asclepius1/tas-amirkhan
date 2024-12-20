@@ -35,6 +35,7 @@ async def amo_webhook(request: Request):
     try:
         data = await request.form()
         data_dict = dict(data)
+        print(data_dict)
         lead_id = str(data_dict.get('leads[add][0][id]', ''))
         print(lead_id)
         if not lead_id:
