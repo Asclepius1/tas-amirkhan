@@ -60,7 +60,8 @@ def get_data_from_amo_by_id(type: Literal['leads', 'contacts', 'companies'], id:
         raise HTTPException(status_code=exc.response.status_code, detail=f"Ошибка запроса: {exc.response.text}")
 
 
-def inserting_data_into_amo(data: dict, lead_id: str):
+def inserting_data_into_amo(data: dict, lead_id: str) -> str:
+    print(data)
     doc_url = data['data']['url']
     doc_id = data['data']['id']
     print('начали вставку данных в сделку амо')
@@ -187,13 +188,14 @@ def get_trustme_data_by_lead_id(lead_id: str) -> dict:
         "IIN_BIN": bin_iin_values[0] if bin_iin_values else '',
         "PhoneNumber": format_phone_number(phone[0]) if phone else ''
     }
-    
+    print(f"Сами реквизиты: {data}")
     return data
 
 
 def trustme_upload_with_file_url(
         lead_id: str, 
         file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/c329ce74-0eaf-4b55-a6e2-3c2c81a175b4/DOGOVOR-na-vnedrenie-2.docx"
+        # file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/fa7cb9e2-62d2-49fd-b662-2a808afc2960/test.docx"
         ) -> str:
     # file_url = ""
     bearer_token = trustme_bearer_token
@@ -214,12 +216,15 @@ def trustme_upload_with_file_url(
     }
 
     response = requests.post(url, json=values, headers=headers)
-    print('запрос на создание файл отправлен')
+    print(f'запрос на создание файл получен: {response}, \n{response.text}')
     # print(response.json())
     data = response.json()
     if not data:
         print('нету данных для вставки')
         return JSONResponse(content={"message": "Не получилось получить данные с trustme"}, status_code=500)
+    if data.get('status') == "Error":
+        print(data.get("errorText"))
+        return data
     return inserting_data_into_amo(data, lead_id)
 
 
@@ -243,9 +248,9 @@ def trustme_set_webhook():
 
 
 if __name__ == "__main__":
-    # print(trustme_upload_with_file_url())
+    print(trustme_upload_with_file_url('23682805'))
     # trustme_set_webhook()
     # data = search_lead_by_doc_id("wriuphbzi")
     # data['_embedded']['leads'][0]['id']
-    change_lead_pipline_by_doc_status(23682805, 3)
+    # change_lead_pipline_by_doc_status(23682805, 3)
     pass

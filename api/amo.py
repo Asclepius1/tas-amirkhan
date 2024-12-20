@@ -22,7 +22,9 @@ async def check(request: Request):
         tern_off_button(lead_id)
         if not lead_id:
             return JSONResponse(content={"message": "Не получилось получить lead_id"}, status_code=500)
-        trustme_upload_with_file_url(lead_id)
+        response = trustme_upload_with_file_url(lead_id)
+        if response.get('status') == "Error":
+            return JSONResponse(content={"message": f"{data.get('errorText')}"}, status_code=500)
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
     except:
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=500)
