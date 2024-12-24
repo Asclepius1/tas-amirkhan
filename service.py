@@ -211,7 +211,7 @@ def get_trustme_data_by_lead_id(lead_id: str) -> dict:
     return data
 
 
-def trustme_upload_with_file_url(
+async def trustme_upload_with_file_url(
         lead_id: str, 
         file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/c329ce74-0eaf-4b55-a6e2-3c2c81a175b4/DOGOVOR-na-vnedrenie-2.docx"
         # file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/fa7cb9e2-62d2-49fd-b662-2a808afc2960/test.docx"
@@ -237,7 +237,7 @@ def trustme_upload_with_file_url(
     response = requests.post(url, json=values, headers=headers)
     print(f'запрос на создание файл получен: {response}, \n{response.text}')
     # print(response.json())
-    data = response.json()
+    data = await response.json()
     if not data:
         print('нету данных для вставки')
         return JSONResponse(content={"message": "Не получилось получить данные с trustme"}, status_code=500)
@@ -272,5 +272,53 @@ if __name__ == "__main__":
     # data = search_lead_by_doc_id("wriuphbzi")
     # data['_embedded']['leads'][0]['id']
     change_lead_pipline_by_doc_status(23720189, 3)
-    print(normalize_nested_keys({'account': {'subdomain': 'tasamirkhan', 'id': '31027490', '_links': {'self': 'https://tasamirkhan.amocrm.ru'}}, 'leads': {'update': {'0': {'id': '23720189', 'name': 'тест 2', 'status_id': '72601322', 'old_status_id': '72601318', 'price': '0', 'responsible_user_id': '9548650', 'last_modified': '1735028792', 'modified_user_id': '9548650', 'created_user_id': '9548650', 'date_create': '1734687178', 'pipeline_id': '9009074', 'account_id': '31027490', 'custom_fields': {'0': {'id': '1323459', 'name': 'ID документа', 'values': {'0': {'value': 'xf1ysrkdz'}}}, '1': {'id': '1323463', 'name': 'Ссылка на подписание', 'values': {'0': {'value': 'http://www.tct.kz/uploader/xf1ysrkdz'}}}, '2': {'id': '1323805', 'name': 'Направить документ', 'values': {'0': {'value': '0'}}}}, 'created_at': '1734687178', 'updated_at': '1735028792'}}}}))
+    data = {
+        "account": {
+            "subdomain": "tasamirkhan",
+            "id": "31027490",
+            "_links": {"self": "https://tasamirkhan.amocrm.ru"},
+        },
+        "leads": {
+            "update": [
+                {
+                    "id": "23720189",
+                    "name": "тест 2",
+                    "status_id": "72601326",
+                    "old_status_id": "72601322",
+                    "price": "0",
+                    "responsible_user_id": "9548650",
+                    "last_modified": "1735029533",
+                    "modified_user_id": "9548650",
+                    "created_user_id": "9548650",
+                    "date_create": "1734687178",
+                    "pipeline_id": "9009074",
+                    "account_id": "31027490",
+                    "custom_fields": [
+                        {
+                            "id": "1323459",
+                            "name": "ID документа",
+                            "values": [{"value": "xf1ysrkdz"}],
+                        },
+                        {
+                            "id": "1323463",
+                            "name": "Ссылка на подписание",
+                            "values": [{"value": "http://www.tct.kz/uploader/xf1ysrkdz"}],
+                        },
+                        {
+                            "id": "1323805",
+                            "name": "Направить документ",
+                            "values": [{"value": "1"}],
+                        },
+                    ],
+                    "created_at": "1734687178",
+                    "updated_at": "1735029533",
+                }
+            ]
+        },
+    }
+    custom_fields = data["leads"]["update"][0]["custom_fields"]
+    for d in custom_fields:
+        if d['id'] == '1323805':
+            print(d)
+
     pass

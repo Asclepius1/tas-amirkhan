@@ -3,7 +3,7 @@ from requests.exceptions import JSONDecodeError
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from fastapi import Depends, Query, Response, status, Request, HTTPException
+from fastapi import Depends, Query, Response, status, Request, BackgroundTasks
 
 from service import trustme_upload_with_file_url, tern_off_button, parse_nested_keys
 
@@ -46,16 +46,18 @@ async def amo_webhook(request: Request):
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
 
 @router.post("/webhook-test")
-async def amo_webhook(request: Request):
+async def amo_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
         data = await request.form()
         data_dict = dict(data)
         structured_data = parse_nested_keys(data_dict)
-        custom_fields:dict = structured_data["leads"]["update"][0]["custom_fields"]
+        custom_fields = structured_data["leads"]["update"][0]["custom_fields"]
         for d in custom_fields:
-            if d['id'] == 1323805:
-                print(d)
-                return JSONResponse(content={"message": "Webhook received successfully"}, status_code=201)
+            if d['id'] == '1323805':
+                if d['values'][0]['value'] == '1':
+                    lead_id = structured_data["leads"]["update"][0]["id"]
+                    background_tasks.add_task(trustme_upload_with_file_url, lead_id)
+                    return JSONResponse(content={"message": "Webhook received successfully"}, status_code=202)
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
 
 
