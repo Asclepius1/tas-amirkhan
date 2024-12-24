@@ -3,6 +3,7 @@ import re
 import json
 import pathlib
 from typing import List, Literal
+import uuid
 
 from fastapi.responses import JSONResponse
 import requests
@@ -16,6 +17,7 @@ load_dotenv(dotenv_path=dotenv_path)
 
 trustme_bearer_token = os.getenv("TRUSTME_API")
 api_url_amo = os.getenv("API_URL_AMO")
+api_url_file_amo = 'https://drive-b.amocrm.ru'
 api_token_amo = os.getenv("AMO_API")
 pipline_id = int(os.getenv("PIPLINE_ID"))
 status_id_signed = int(os.getenv("STATUS_ID_SIGNED"))
@@ -113,7 +115,7 @@ def search_lead_by_doc_id(doc_id: str) -> dict:
     except requests.exceptions.HTTPError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=f"Ошибка запроса: {exc.response.text}")
 
-def change_lead_pipline_by_doc_status(lead_id: int|str, doc_status: int):
+def change_lead_pipline_by_doc_status(lead_id: int|str, doc_status: int) -> str|HTTPException:
     url = f"{api_url_amo}/api/v4/leads/{lead_id}"
     headers = {"Authorization": f"Bearer {api_token_amo}"}
     if doc_status == 0:
@@ -175,6 +177,27 @@ def parse_nested_keys(data):
     return normalize_nested_keys(result)
 
 
+def get_file_uuid_by_lead_id(lead_id: str) -> str|None:
+
+    url = f'{api_url_amo}/api/v4/leads/{lead_id}/files'
+    headers = {"Authorization": f"Bearer {api_token_amo}"}
+    response = requests.get(url=url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        first_uuid = data['_embedded']['files'][0].get('file_uuid', '')
+        return first_uuid
+    return None
+
+def get_file_url_by_uuid(file_uuid: str):
+
+    url = f'{api_url_file_amo}/v1.0/files/{file_uuid}'
+    headers = {"Authorization": f"Bearer {api_token_amo}"}
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    file_url = data['_links']['download']['href']
+    return file_url
+
+
 #--------trustme-----------
 def get_trustme_data_by_lead_id(lead_id: str) -> dict:
     raw_data = get_data_from_amo_by_id('leads', lead_id)
@@ -213,21 +236,24 @@ def get_trustme_data_by_lead_id(lead_id: str) -> dict:
 
 async def trustme_upload_with_file_url(
         lead_id: str, 
-        file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/c329ce74-0eaf-4b55-a6e2-3c2c81a175b4/DOGOVOR-na-vnedrenie-2.docx"
-        # file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/fa7cb9e2-62d2-49fd-b662-2a808afc2960/test.docx"
+        # file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/c329ce74-0eaf-4b55-a6e2-3c2c81a175b4/DOGOVOR-na-vnedrenie-2.docx"
         ) -> str:
-    # file_url = ""
     tern_off_button(lead_id)
     bearer_token = trustme_bearer_token
-    # url = 'https://private-anon-8fb911b817-trustmekz.apiary-mock.com/trust_contract_public_apis/UploadWithFileURL'
     url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
     print('check - trustme upload start')
+    
+    file_uuid = get_file_uuid_by_lead_id(lead_id)
+    if not file_uuid:
+        return
+    file_url = get_file_url_by_uuid(file_uuid)
+
     values = {
-    "downloadURL": file_url,
-    "KzBmg": False,
-    "FaceId":False,
-    "requisites": [get_trustme_data_by_lead_id(lead_id)],
-    "contractName": "test"
+        "downloadURL": file_url,
+        "KzBmg": False,
+        "FaceId":False,
+        "requisites": [get_trustme_data_by_lead_id(lead_id)],
+        "contractName": "test"
     }
     print('получили ревизиты')
     headers = {
@@ -237,7 +263,6 @@ async def trustme_upload_with_file_url(
 
     response = requests.post(url, json=values, headers=headers)
     print(f'запрос на создание файл получен: {response}, \n{response.text}')
-    # print(response.json())
     data = response.json()
     if not data:
         print('нету данных для вставки')
@@ -272,54 +297,7 @@ if __name__ == "__main__":
     # trustme_set_webhook()
     # data = search_lead_by_doc_id("wriuphbzi")
     # data['_embedded']['leads'][0]['id']
-    change_lead_pipline_by_doc_status(23720189, 3)
-    data = {
-        "account": {
-            "subdomain": "tasamirkhan",
-            "id": "31027490",
-            "_links": {"self": "https://tasamirkhan.amocrm.ru"},
-        },
-        "leads": {
-            "update": [
-                {
-                    "id": "23720189",
-                    "name": "тест 2",
-                    "status_id": "72601326",
-                    "old_status_id": "72601322",
-                    "price": "0",
-                    "responsible_user_id": "9548650",
-                    "last_modified": "1735029533",
-                    "modified_user_id": "9548650",
-                    "created_user_id": "9548650",
-                    "date_create": "1734687178",
-                    "pipeline_id": "9009074",
-                    "account_id": "31027490",
-                    "custom_fields": [
-                        {
-                            "id": "1323459",
-                            "name": "ID документа",
-                            "values": [{"value": "xf1ysrkdz"}],
-                        },
-                        {
-                            "id": "1323463",
-                            "name": "Ссылка на подписание",
-                            "values": [{"value": "http://www.tct.kz/uploader/xf1ysrkdz"}],
-                        },
-                        {
-                            "id": "1323805",
-                            "name": "Направить документ",
-                            "values": [{"value": "1"}],
-                        },
-                    ],
-                    "created_at": "1734687178",
-                    "updated_at": "1735029533",
-                }
-            ]
-        },
-    }
-    custom_fields = data["leads"]["update"][0]["custom_fields"]
-    for d in custom_fields:
-        if d['id'] == '1323805':
-            print(d)
-
+    # change_lead_pipline_by_doc_status(23720189, 3)
+    # print(get_file_url_by_uuid(get_file_uuid_by_lead_id('23682805')))
     pass
+    
