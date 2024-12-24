@@ -155,6 +155,15 @@ def tern_off_button(lead_id: str) -> dict:
         # Обработка HTTP ошибок
         raise HTTPException(status_code=exc.response.status_code, detail=f"Ошибка запроса: {exc.response.text}")
 
+def normalize_nested_keys(data):
+    if isinstance(data, dict):
+        # Проверяем, все ли ключи числовые, чтобы превратить их в список
+        if all(k.isdigit() for k in data.keys()):
+            return [normalize_nested_keys(data[k]) for k in sorted(data, key=int)]
+        # Рекурсивно обрабатываем вложенные словари
+        return {k: normalize_nested_keys(v) for k, v in data.items()}
+    return data  
+
 def parse_nested_keys(data):
     result = {}
     for key, value in data.items():
@@ -163,7 +172,7 @@ def parse_nested_keys(data):
         for k in keys[:-1]:  # Создаем вложенные словари
             current = current.setdefault(k, {})
         current[keys[-1]] = value  # Устанавливаем значение
-    return result
+    return normalize_nested_keys(result)
 
 
 #--------trustme-----------
@@ -262,5 +271,6 @@ if __name__ == "__main__":
     # trustme_set_webhook()
     # data = search_lead_by_doc_id("wriuphbzi")
     # data['_embedded']['leads'][0]['id']
-    # change_lead_pipline_by_doc_status(23720189, 3)
+    change_lead_pipline_by_doc_status(23720189, 3)
+    print(normalize_nested_keys({'account': {'subdomain': 'tasamirkhan', 'id': '31027490', '_links': {'self': 'https://tasamirkhan.amocrm.ru'}}, 'leads': {'update': {'0': {'id': '23720189', 'name': 'тест 2', 'status_id': '72601322', 'old_status_id': '72601318', 'price': '0', 'responsible_user_id': '9548650', 'last_modified': '1735028792', 'modified_user_id': '9548650', 'created_user_id': '9548650', 'date_create': '1734687178', 'pipeline_id': '9009074', 'account_id': '31027490', 'custom_fields': {'0': {'id': '1323459', 'name': 'ID документа', 'values': {'0': {'value': 'xf1ysrkdz'}}}, '1': {'id': '1323463', 'name': 'Ссылка на подписание', 'values': {'0': {'value': 'http://www.tct.kz/uploader/xf1ysrkdz'}}}, '2': {'id': '1323805', 'name': 'Направить документ', 'values': {'0': {'value': '0'}}}}, 'created_at': '1734687178', 'updated_at': '1735028792'}}}}))
     pass
