@@ -51,9 +51,13 @@ async def amo_webhook(request: Request):
         data = await request.form()
         data_dict = dict(data)
         structured_data = parse_nested_keys(data_dict)
-        print(structured_data)
-        # if data_dict[""]
-
+        lead:dict = structured_data["leads"]["update"][0]["custom_fields"]
+        for key, value in lead.items():
+            if value == "1323805":
+                print("ключ найден")
+            return JSONResponse(content={"message": "Webhook received successfully"}, status_code=201)
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
+
+
     except:
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
