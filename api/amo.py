@@ -9,27 +9,6 @@ from service import trustme_upload_with_file_url, tern_off_button, parse_nested_
 
 router = APIRouter(prefix="/amo", tags=["Amo"])
 
-@router.post("/check")
-async def check(request: Request):
-    """
-    Пока не работает, нужен для того чтобы вручную обновлять данные с trustme в amo
-    """
-    try:
-        data = await request.form()
-        data_dict = dict(data)
-        lead_id = str(data_dict.get('leads[add][0][id]', ''))
-        print(data_dict)
-        tern_off_button(lead_id)
-        if not lead_id:
-            return JSONResponse(content={"message": "Не получилось получить lead_id"}, status_code=500)
-        response = trustme_upload_with_file_url(lead_id)
-        if response.get('status') == "Error":
-            return JSONResponse(content={"message": f"{data.get('errorText')}"}, status_code=500)
-        return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
-    except:
-        return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=500)
-
-
 @router.post("/webhook")
 async def amo_webhook(request: Request):
     try:
@@ -45,7 +24,7 @@ async def amo_webhook(request: Request):
     except:
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
 
-@router.post("/webhook-test")
+@router.post("/webhook-upload-file")
 async def amo_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
         data = await request.form()
