@@ -115,7 +115,7 @@ def search_lead_by_doc_id(doc_id: str) -> dict:
     except requests.exceptions.HTTPError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=f"Ошибка запроса: {exc.response.text}")
 
-def upload_file_into_amo_file_data(file_url):
+def upload_file_into_amo_file_data(file_url: str):
     # Шаг 1. Скачиваем файл из облака
     # local_file_path = file_url.split('/')[-1]
     response = requests.get(file_url, stream=True)
@@ -172,13 +172,21 @@ def upload_signed_doc_in_lead(lead_id: int|str, doc_id:str) -> str|HTTPException
     url = f"{api_url_amo}/api/v4/leads/{lead_id}/notes"
     doc_url = f"https://test.trustme.kz/trust_contract_public_apis/doc/DownloadContractFile/{doc_id}"
     file_uuid, filename = upload_file_into_amo_file_data(doc_url)
-    data = {
-        'note_type':'attachment',
-        "params": {
-            "file_uuid": file_uuid,
-            "file_name": filename,
-        }
-    }
+    data = [
+        {
+            'note_type': 'common',
+            'params':{
+                'text': 'Документ успешно получен'
+            }
+        },
+        {
+            'note_type':'attachment',
+            "params": {
+                "version_uuid": '',
+                "file_uuid": file_uuid,
+                "file_name": filename,
+            },
+    }]
     try:
         response = requests.post(url, headers=amo_header, json=data)
         response.raise_for_status()
@@ -256,18 +264,18 @@ def get_file_url_by_uuid(file_uuid: str) -> str|None:
 #--------trustme-----------
 def get_trustme_data_by_lead_id(lead_id: str) -> dict:
     raw_data = get_data_from_amo_by_id('leads', lead_id)
-    companies_id = raw_data['_embedded']['companies'][0]['id']
+    # companies_id = raw_data['_embedded']['companies'][0]['id']
     contacts_id = raw_data['_embedded']['contacts'][0]['id']
     contacts_data = get_data_from_amo_by_id('contacts', contacts_id)
-    companies_data = get_data_from_amo_by_id('companies', companies_id) 
+    # companies_data = get_data_from_amo_by_id('companies', companies_id) 
 
-    companies_custom_fields = companies_data.get('custom_fields_values', [])
-    bin_iin_values = [
-        v['value']
-        for field in companies_custom_fields
-        if field.get('field_id') == 1322681
-        for v in field.get('values', [])
-    ]
+    # companies_custom_fields = companies_data.get('custom_fields_values', [])
+    # bin_iin_values = [
+    #     v['value']
+    #     for field in companies_custom_fields
+    #     if field.get('field_id') == 1322681
+    #     for v in field.get('values', [])
+    # ]
 
     contacts_custom_fields = contacts_data.get('custom_fields_values', [])
     phone = [
@@ -276,11 +284,24 @@ def get_trustme_data_by_lead_id(lead_id: str) -> dict:
         if field.get('field_id') == 1320119
         for v in field.get('values', [])
     ]
+    bin_iin_values = [
+        v['value']
+        for field in contacts_custom_fields
+        if field.get('field_id') == 1323815
+        for v in field.get('values', [])
+    ]
+    companiy_name = [
+        v['value']
+        for field in contacts_custom_fields
+        if field.get('field_id') == 1322679
+        for v in field.get('values', [])
+    ]
 
 
 
     data = {
-        "CompanyName":companies_data['name'],
+        # "CompanyName":companies_data['name'],
+        "CompanyName":companiy_name[0] if companiy_name else '',
         "FIO":contacts_data['name'],
         "IIN_BIN": bin_iin_values[0] if bin_iin_values else '',
         "PhoneNumber": format_phone_number(phone[0]) if phone else ''
@@ -352,7 +373,7 @@ if __name__ == "__main__":
     # trustme_set_webhook()
     # data = search_lead_by_doc_id("wriuphbzi")
     # data['_embedded']['leads'][0]['id']
-    # load_signed_doc_in_lead(23720189, 3)
+    upload_signed_doc_in_lead('23720189', '5tktfq644')
     # print(get_file_url_by_uuid('1ab735df-dd91-47eb-8c9e-93a4b76204ca'))
     # upload_file_into_amo_file_data('https://test.trustme.kz/trust_contract_public_apis/doc/DownloadContractFile/xf1ysrkdz')
     pass
