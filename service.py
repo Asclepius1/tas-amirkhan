@@ -217,6 +217,7 @@ async def trustme_upload_with_file_url(
         # file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/fa7cb9e2-62d2-49fd-b662-2a808afc2960/test.docx"
         ) -> str:
     # file_url = ""
+    tern_off_button(lead_id)
     bearer_token = trustme_bearer_token
     # url = 'https://private-anon-8fb911b817-trustmekz.apiary-mock.com/trust_contract_public_apis/UploadWithFileURL'
     url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
