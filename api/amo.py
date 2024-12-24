@@ -44,3 +44,13 @@ async def amo_webhook(request: Request):
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
     except:
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
+
+@router.post("/webhook-test")
+async def amo_webhook(request: Request):
+    try:
+        data = await request.form()
+        data_dict = dict(data)
+        print(data_dict)
+        return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
+    except:
+        return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
