@@ -60,4 +60,4 @@ async def amo_webhook(request: Request):
 
 
     except:
-        return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
+        return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=203)
