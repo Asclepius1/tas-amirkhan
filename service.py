@@ -138,7 +138,7 @@ def tern_off_button(lead_id: str) -> dict:
     data = {
         "custom_fields_values": [
             {
-                "field_id": 1003249,
+                "field_id": 1323805,
                 "values": [
                     {
                         "value": False  # Отключение checkbox
