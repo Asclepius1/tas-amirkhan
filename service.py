@@ -237,7 +237,7 @@ async def trustme_upload_with_file_url(
     response = requests.post(url, json=values, headers=headers)
     print(f'запрос на создание файл получен: {response}, \n{response.text}')
     # print(response.json())
-    data = await response.json()
+    data = response.json()
     if not data:
         print('нету данных для вставки')
         return JSONResponse(content={"message": "Не получилось получить данные с trustme"}, status_code=500)
