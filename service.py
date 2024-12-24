@@ -155,6 +155,16 @@ def tern_off_button(lead_id: str) -> dict:
         # Обработка HTTP ошибок
         raise HTTPException(status_code=exc.response.status_code, detail=f"Ошибка запроса: {exc.response.text}")
 
+def parse_nested_keys(data):
+    result = {}
+    for key, value in data.items():
+        keys = key.replace(']', '').split('[')  # Разбиваем ключ по уровням
+        current = result
+        for k in keys[:-1]:  # Создаем вложенные словари
+            current = current.setdefault(k, {})
+        current[keys[-1]] = value  # Устанавливаем значение
+    return result
+
 
 #--------trustme-----------
 def get_trustme_data_by_lead_id(lead_id: str) -> dict:

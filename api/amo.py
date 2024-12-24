@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from fastapi import Depends, Query, Response, status, Request, HTTPException
 
-from service import trustme_upload_with_file_url, tern_off_button
+from service import trustme_upload_with_file_url, tern_off_button, parse_nested_keys
 
 router = APIRouter(prefix="/amo", tags=["Amo"])
 
@@ -50,7 +50,10 @@ async def amo_webhook(request: Request):
     try:
         data = await request.form()
         data_dict = dict(data)
-        print(data_dict)
+        structured_data = parse_nested_keys(data_dict)
+        print(structured_data)
+        # if data_dict[""]
+
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
     except:
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
