@@ -43,7 +43,7 @@ class ContractUpdate(BaseModel):
     contract_url: HttpUrl
 
 
-@router.post("/webhook")
+@router.post("/webhook/test")
 async def webhook_trustme_test(ContractUpdate: ContractUpdate):
     try:
         # Получаем данные из тела запроса
