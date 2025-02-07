@@ -44,7 +44,7 @@ class ContractUpdate(BaseModel):
 
 
 @router.post("/webhook")
-async def webhook_trustme(ContractUpdate: ContractUpdate):
+async def webhook_trustme_test(ContractUpdate: ContractUpdate):
     try:
         # Получаем данные из тела запроса
         data_dict = ContractUpdate  # Преобразуем в обычный словарь для удобства
