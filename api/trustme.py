@@ -4,7 +4,7 @@ from requests.exceptions import JSONDecodeError
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from fastapi import Depends, Query, Response, status, Request, HTTPException
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 from service import upload_signed_doc_in_lead, search_lead_by_doc_id
 
 router = APIRouter(prefix="/trustme", tags=["TrustMe"])
@@ -40,7 +40,7 @@ class ContractUpdate(BaseModel):
     contract_id: str
     status: int
     client: str
-    contract_url: HttpUrl
+    contract_url: str
 
 
 @router.post("/webhook/test")
