@@ -41,4 +41,7 @@ async def amo_webhook(request: Request, background_tasks: BackgroundTasks):
 
 
     except:
+        data = await request.form()
+        data_dict = dict(data)
+        print(data_dict)
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=203)

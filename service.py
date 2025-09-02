@@ -15,15 +15,15 @@ from fastapi import HTTPException, Response
 dotenv_path = pathlib.Path(__file__).parent /  ".env"
 load_dotenv(dotenv_path=dotenv_path)
 
-trustme_bearer_token = os.getenv("TRUSTME_API")
-api_url_amo = os.getenv("API_URL_AMO")
-api_url_file_amo = 'https://drive-b.amocrm.ru'
-api_token_amo = os.getenv("AMO_API")
-pipline_id = int(os.getenv("PIPLINE_ID"))
-status_id_signed = int(os.getenv("STATUS_ID_SIGNED"))
-status_id_signed_by_the_client = int(os.getenv("STATUS_ID_SIGNED_BY_THE_CLIENT"))
-status_id_signed_by_the_company = int(os.getenv("STATUS_ID_SIGNED_BY_THE_COMPANY"))
-amo_header = {"Authorization": f"Bearer {api_token_amo}"}
+TRUSTME_BEARER_TOKEN = os.getenv("TRUSTME_API")
+API_URL_AMO = os.getenv("API_URL_AMO")
+API_URL_FILE_AMO = 'https://drive-b.amocrm.ru'
+API_TOKEN_AMO = os.getenv("AMO_API")
+PIPLINE_ID = int(os.getenv("PIPLINE_ID"))
+STATUS_ID_SIGNED = int(os.getenv("STATUS_ID_SIGNED"))
+STATUS_ID_SIGNED_BY_THE_CLIENT = int(os.getenv("STATUS_ID_SIGNED_BY_THE_CLIENT"))
+STATUS_ID_SIGNED_BY_THE_COMPANY = int(os.getenv("STATUS_ID_SIGNED_BY_THE_COMPANY"))
+AMO_HEADER = {"Authorization": f"Bearer {API_TOKEN_AMO}"}
 
 #------общие----------
 def format_phone_number(phone: str) -> str:
@@ -47,13 +47,13 @@ def format_phone_number(phone: str) -> str:
 
 #------amo-----
 def get_data_from_amo_by_id(type: Literal['leads', 'contacts', 'companies'], id: str) -> dict:
-    url = f"{api_url_amo}/api/v4/{type}/{id}"
+    url = f"{API_URL_AMO}/api/v4/{type}/{id}"
     
     params = {
         "with": 'contacts'
     }
     try:
-        response = requests.get(url, headers=amo_header, params=params)
+        response = requests.get(url, headers=AMO_HEADER, params=params)
         response.raise_for_status()  # Проверка на успешный статус
         data = response.json()
         return data
@@ -67,7 +67,7 @@ def inserting_data_into_amo(data: dict, lead_id: str) -> str:
     doc_url = data['data']['url']
     doc_id = data['data']['id']
     print('начали вставку данных в сделку амо')
-    url = f"{api_url_amo}/api/v4/leads/{lead_id}"
+    url = f"{API_URL_AMO}/api/v4/leads/{lead_id}"
     data = {
         "custom_fields_values":[
             {
@@ -91,7 +91,7 @@ def inserting_data_into_amo(data: dict, lead_id: str) -> str:
     
     print('запрос отправлен')
     try:
-        response = requests.patch(url, headers=amo_header, json=data)
+        response = requests.patch(url, headers=AMO_HEADER, json=data)
         response.raise_for_status()
         return response.text
     except requests.exceptions.HTTPError as exc:
@@ -100,7 +100,7 @@ def inserting_data_into_amo(data: dict, lead_id: str) -> str:
 
 
 def search_lead_by_doc_id(doc_id: str) -> dict:
-    url = f"{api_url_amo}/api/v4/leads"
+    url = f"{API_URL_AMO}/api/v4/leads"
     params = {
         'limit': 1,
         'query':doc_id
@@ -108,7 +108,7 @@ def search_lead_by_doc_id(doc_id: str) -> dict:
     
 
     try:
-        response = requests.get(url, headers=amo_header, params=params)
+        response = requests.get(url, headers=AMO_HEADER, params=params)
         response.raise_for_status()
         data = response.json()
         return data
@@ -140,7 +140,7 @@ def upload_file_into_amo_file_data(file_url: str):
         "file_size": file_size,
         "content_type": content_type
     }
-    session_response = requests.post(f"{api_url_file_amo}/v1.0/sessions", json=session_payload, headers=amo_header)
+    session_response = requests.post(f"{API_URL_FILE_AMO}/v1.0/sessions", json=session_payload, headers=AMO_HEADER)
     session_response.raise_for_status()
     session_data = session_response.json()
 
@@ -152,7 +152,7 @@ def upload_file_into_amo_file_data(file_url: str):
     with open(local_file_path, 'rb') as f:
         part_number = 0
         while chunk := f.read(max_part_size):
-            part_response = requests.post(upload_url, data=chunk, headers=amo_header)
+            part_response = requests.post(upload_url, data=chunk, headers=AMO_HEADER)
             part_response.raise_for_status()
             part_data = part_response.json()
             upload_url = part_data.get("next_url")
@@ -169,7 +169,7 @@ def upload_file_into_amo_file_data(file_url: str):
     return part_data['uuid'], file_name
 
 def upload_signed_doc_in_lead(lead_id: int|str, doc_id:str) -> str|HTTPException:
-    url = f"{api_url_amo}/api/v4/leads/{lead_id}/notes"
+    url = f"{API_URL_AMO}/api/v4/leads/{lead_id}/notes"
     doc_url = f"https://test.trustme.kz/trust_contract_public_apis/doc/DownloadContractFile/{doc_id}"
     file_uuid, filename = upload_file_into_amo_file_data(doc_url)
     data = [
@@ -188,7 +188,7 @@ def upload_signed_doc_in_lead(lead_id: int|str, doc_id:str) -> str|HTTPException
             },
     }]
     try:
-        response = requests.post(url, headers=amo_header, json=data)
+        response = requests.post(url, headers=AMO_HEADER, json=data)
         response.raise_for_status()
         return response.text
     except requests.exceptions.HTTPError as exc:
@@ -198,7 +198,7 @@ def upload_signed_doc_in_lead(lead_id: int|str, doc_id:str) -> str|HTTPException
 
 
 def tern_off_button(lead_id: str) -> dict:
-    url = f"{api_url_amo}/api/v4/leads/{lead_id}"
+    url = f"{API_URL_AMO}/api/v4/leads/{lead_id}"
     
     data = {
         "custom_fields_values": [
@@ -213,7 +213,7 @@ def tern_off_button(lead_id: str) -> dict:
         ]
     }
     try:
-        response = requests.patch(url, json=data, headers=amo_header)
+        response = requests.patch(url, json=data, headers=AMO_HEADER)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.HTTPError as exc:
@@ -242,9 +242,9 @@ def parse_nested_keys(data):
 
 def get_file_uuid_by_lead_id(lead_id: str) -> str|None:
 
-    url = f'{api_url_amo}/api/v4/leads/{lead_id}/files'
+    url = f'{API_URL_AMO}/api/v4/leads/{lead_id}/files'
     
-    response = requests.get(url=url, headers=amo_header)
+    response = requests.get(url=url, headers=AMO_HEADER)
     if response.status_code == 200:
         data = response.json()
         first_uuid = data['_embedded']['files'][0].get('file_uuid', '')
@@ -252,9 +252,9 @@ def get_file_uuid_by_lead_id(lead_id: str) -> str|None:
 
 def get_file_url_by_uuid(file_uuid: str) -> str|None:
 
-    url = f'{api_url_file_amo}/v1.0/files/{file_uuid}'
+    url = f'{API_URL_FILE_AMO}/v1.0/files/{file_uuid}'
     
-    response = requests.get(url, headers=amo_header)
+    response = requests.get(url, headers=AMO_HEADER)
     data = response.json()
     if '_links' in data:
         file_url = data['_links']['download']['href']
@@ -315,7 +315,7 @@ async def trustme_upload_with_file_url(
         # file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/c329ce74-0eaf-4b55-a6e2-3c2c81a175b4/DOGOVOR-na-vnedrenie-2.docx"
         ) -> str:
     tern_off_button(lead_id)
-    bearer_token = trustme_bearer_token
+    bearer_token = TRUSTME_BEARER_TOKEN
     url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
     print('check - trustme upload start')
     
@@ -359,7 +359,7 @@ def trustme_set_webhook():
 
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer {}'.format(trustme_bearer_token)
+        'Authorization': 'Bearer {}'.format(TRUSTME_BEARER_TOKEN)
     }
 
     response = requests.post(url, json=values, headers=headers)
