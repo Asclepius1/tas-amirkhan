@@ -14,6 +14,7 @@ async def webhook_trustme(request: Request):
     try:
         # Получаем данные из тела запроса
         data = await request.form()
+        print(data, request.body())
         data_dict = dict(data)  # Преобразуем в обычный словарь для удобства
         print(f"\n\n{data_dict}\n\n")
         example = {
