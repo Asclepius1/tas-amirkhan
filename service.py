@@ -349,7 +349,8 @@ async def trustme_upload_with_file_url(
 
 
 def trustme_set_webhook():
-    hook_url = 'https://webhook.site/1d6f9989-d61e-4b7f-99a0-81fadd0ab321'
+    # hook_url = 'https://webhook.site/1d6f9989-d61e-4b7f-99a0-81fadd0ab321'
+    hook_url = 'http://82.115.43.124:8000/trustme/webhook'
     url = 'https://test.trustme.kz/trust_contract_public_apis/SetHook'
 
     values = {
@@ -369,7 +370,7 @@ def trustme_set_webhook():
 
 if __name__ == "__main__":
     # print(trustme_upload_with_file_url('23682805'))
-    # trustme_set_webhook()
+    trustme_set_webhook()
     # data = search_lead_by_doc_id("wriuphbzi")
     # data['_embedded']['leads'][0]['id']
     # upload_signed_doc_in_lead('23720189', '5tktfq644')
@@ -377,25 +378,25 @@ if __name__ == "__main__":
     # upload_file_into_amo_file_data('https://test.trustme.kz/trust_contract_public_apis/doc/DownloadContractFile/xf1ysrkdz')
     
     
-    url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
-    file_url = 'https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/1e0b7b6a-ef82-4e72-bb0f-a1e5a06c4109/test.docx'
-    requi = [{'CompanyName': 'тест тррррр', 'FIO': 'тест два', 'IIN_BIN': '141241241241241', 'PhoneNumber': '+77474078044'}]
+    # url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
+    # file_url = 'https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/1e0b7b6a-ef82-4e72-bb0f-a1e5a06c4109/test.docx'
+    # requi = [{'CompanyName': 'тест тррррр', 'FIO': 'тест два', 'IIN_BIN': '141241241241241', 'PhoneNumber': '+77474078044'}]
 
-    values = {
-        "downloadURL": file_url,
-        "KzBmg": False,
-        "FaceId":False,
-        "requisites": requi,
-        "contractName": "test"
-    }
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
-    }
+    # values = {
+    #     "downloadURL": file_url,
+    #     "KzBmg": False,
+    #     "FaceId":False,
+    #     "requisites": requi,
+    #     "contractName": "test"
+    # }
+    # headers = {
+    #     'Content-Type': 'application/json',
+    #     'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
+    # }
 
-    response = requests.post(url, json=values, headers=headers)
-    print(f'запрос на создание файл получен: {response}, \n{response.text}')
-    data = response.json()
-    print(data)
-    pass
+    # response = requests.post(url, json=values, headers=headers)
+    # print(f'запрос на создание файл получен: {response}, \n{response.text}')
+    # data = response.json()
+    # print(data)
+    # pass
     

@@ -15,6 +15,7 @@ async def webhook_trustme(request: Request):
         # Получаем данные из тела запроса
         data = await request.form()
         data_dict = dict(data)  # Преобразуем в обычный словарь для удобства
+        print(f"\n\n{data_dict}\n\n")
         example = {
             "contract_id": "wriuphbzi",
             "status": 3,
@@ -25,6 +26,7 @@ async def webhook_trustme(request: Request):
         doc_id = data_dict["contract_id"]
         lead_data = search_lead_by_doc_id(doc_id)
 
+        print(f"\n\n{lead_data}\n\n")
         lead_id = lead_data['_embedded']['leads'][0]['id']
 
         if data_dict["status"] == 3:
