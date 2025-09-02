@@ -27,10 +27,10 @@ async def webhook_trustme(request: Request):
 
         lead_id = lead_data['_embedded']['leads'][0]['id']
 
-        if data_dict["status"] == 3:
+        if data_dict["status"] == 2: #Заменить на 3 для полной подписи
             upload_signed_doc_in_lead(lead_id, doc_id)    
             return JSONResponse(content={"message": "successful"}, status_code=200)
-        return JSONResponse(content={"message": "successful"}, status_code=200)
+        return JSONResponse(content={"message": "successful"}, status_code=202)
         
     except Exception as e:
         print("Что-то пошло не так при обработке:", str(e))
