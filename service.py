@@ -23,6 +23,8 @@ PIPLINE_ID = int(os.getenv("PIPLINE_ID"))
 STATUS_ID_SIGNED = int(os.getenv("STATUS_ID_SIGNED"))
 STATUS_ID_SIGNED_BY_THE_CLIENT = int(os.getenv("STATUS_ID_SIGNED_BY_THE_CLIENT"))
 STATUS_ID_SIGNED_BY_THE_COMPANY = int(os.getenv("STATUS_ID_SIGNED_BY_THE_COMPANY"))
+F5_DOCUMENT_API = os.getenv("F5_DOCUMENT_API")
+F5_DOCUMENT_URL = os.getenv("F5_DOCUMENT_URL")
 AMO_HEADER = {"Authorization": f"Bearer {API_TOKEN_AMO}"}
 
 #------общие----------
@@ -317,11 +319,19 @@ async def trustme_upload_with_file_url(
     tern_off_button(lead_id)
     url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
     print('check - trustme upload start')
+    # #Метод для amo документов 
+    # file_uuid = get_file_uuid_by_lead_id(lead_id)
+    # if not file_uuid:
+    #     return
+    # file_url = get_file_url_by_uuid(file_uuid)
+    # #------------------------
     
-    file_uuid = get_file_uuid_by_lead_id(lead_id)
-    if not file_uuid:
-        return
-    file_url = get_file_url_by_uuid(file_uuid)
+    #Метод для amo документов 
+    lead_id_int = int(lead_id) 
+    doc = get_doc_id_by_f5(lead_id_int)
+    doc_id = doc.get('id')
+    file_url = get_doc_url_by_id(doc_id)
+    #------------------------
     print(f"\n\n{file_url}\n\n")
     values = {
         "downloadURL": file_url,
@@ -367,10 +377,52 @@ def trustme_set_webhook():
     print(response.text)
     return response.text
 
+def get_custom_fields(lead_id = None):
+    import pyperclip
+    url = f'{API_URL_AMO}/api/v4/leads/custom_fields'
+    response = requests.get(url=url, headers=AMO_HEADER)
+    if response.status_code == 200:
+        data = response.json()
+        pyperclip.copy(f'{data}')
+        # return data
 
+def get_doc_id_by_f5(entity_id: int):
+    headers = {
+        'X-Api-Token': f'{F5_DOCUMENT_API}',
+        'Content-Type': 'application/json'
+    }
+    response = requests.get(url=F5_DOCUMENT_URL, headers=headers)
+    if response.status_code == 200:
+        data:dict = response.json()
+        documents = [
+            doc for doc in data.get("data", {}).get("documents", [])
+            if doc.get("entity_id") == entity_id
+        ]
+        last_doc = documents[-1] if documents else None
+        return last_doc
+    else:
+        print(f"Ошибка: {response.status_code} - {response.text}")
+
+def get_doc_url_by_id(document_id: str, format: str = 'docx'):
+    headers = {
+        'X-Api-Token': f'{F5_DOCUMENT_API}',
+        'Content-Type': 'application/json'
+    }
+    url = f'{F5_DOCUMENT_URL}/{document_id}'
+    print(url)
+    response = requests.get(url=f'{F5_DOCUMENT_URL}/{document_id}', headers=headers)
+    if response.status_code == 200:
+        data:dict = response.json()
+        print(data)
+        id = data.get('data').get('document').get('document_id')
+        return f'https://docs.google.com/document/export?format={format}&id={id}'
+    
 if __name__ == "__main__":
     # print(trustme_upload_with_file_url('23682805'))
-    trustme_set_webhook()
+    # trustme_set_webhook()
+    doc = get_doc_id_by_f5(26231243)
+    doc_id = doc.get('id')
+    print(get_doc_url_by_id(doc_id))  
     # data = search_lead_by_doc_id("wriuphbzi")
     # data['_embedded']['leads'][0]['id']
     # upload_signed_doc_in_lead('23720189', '5tktfq644')
