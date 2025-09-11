@@ -330,6 +330,7 @@ async def trustme_upload_with_file_url(
     lead_id_int = int(lead_id) 
     doc = get_doc_id_by_f5(lead_id_int)
     doc_id = doc.get('id')
+    file_name = doc.get('name')
     file_url = get_doc_url_by_id(doc_id)
     #------------------------
     print(f"\n\n{file_url}\n\n")
@@ -338,7 +339,7 @@ async def trustme_upload_with_file_url(
         "KzBmg": False,
         "FaceId":False,
         "requisites": [get_trustme_data_by_lead_id(lead_id)],
-        "contractName": "test"
+        "contractName": file_name
     }
     print('получили ревизиты')
     headers = {
