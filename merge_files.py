@@ -17,8 +17,8 @@ def download_file(file_url: str, format_: str = 'pdf') -> str|None:
         if match:
             filename = urllib.parse.unquote(match.group(1)).split('.')[0]
             file_path = f'temp/{filename}[{uuid.uuid4()}.{format_}'
-            with open(file_path, 'wb') as f:
-                f.write(response.content)
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
         return file_path, filename
 def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
     
