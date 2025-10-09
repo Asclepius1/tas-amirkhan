@@ -7,7 +7,7 @@ import pypdf
 def download_file(file_url: str, format_: str = 'pdf') -> str|None:
 
     response = requests.get(file_url)
-    file_path = f'temp/{uuid.uuid4}.{format_}'
+    file_path = f'temp/{uuid.uuid4()}.{format_}'
 
     if response.status_code == 200:
         with open(file_path, 'wb') as f:
@@ -27,7 +27,7 @@ def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
 
     for page in reader.pages:
         writer.add_page(page)
-    result_path = f"temp/{uuid.uuid4}.pdf"
+    result_path = f"temp/{uuid.uuid4()}.pdf"
     writer.write(result_path)
     os.remove(doc_file_path)
     os.remove(smeta_file_path)
