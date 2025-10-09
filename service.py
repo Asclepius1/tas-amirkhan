@@ -323,9 +323,9 @@ async def trustme_upload_with_file_url(
     print('check - trustme upload start')
     # #Метод для amo документов 
     file_uuid = get_file_uuid_by_lead_id(lead_id)
-    if not file_uuid:
-        return
-    smeta_file_url = get_file_url_by_uuid(file_uuid)
+    smeta_file_url = None
+    if file_uuid:
+        smeta_file_url = get_file_url_by_uuid(file_uuid)
     # #------------------------
     
     #Метод для amo документов 
@@ -367,7 +367,11 @@ async def trustme_upload_with_file_url(
     if data.get('status') == "Error":
         print(data.get("errorText"))
         return data
-    os.remove(f'temp/{file_path}') if file_path is not None else None # удаляем временный файл если такой есть
+    if os.path.exists(f'temp/{file_path}'):
+        os.remove(f'temp/{file_path}')
+        print("Файл удалён")
+    else:
+        print("Файл не найден")
     return inserting_data_into_amo(data, lead_id)
 
 
@@ -432,6 +436,22 @@ def get_doc_url_by_id(document_id: str, format: str = 'docx'):
     
 if __name__ == "__main__":
     # 26231243
-    file_uuid = get_file_uuid_by_lead_id('26231243')
-    smeta_file_url = get_file_url_by_uuid(file_uuid)
-    print(smeta_file_url)
+    # file_uuid = get_file_uuid_by_lead_id('26231243')
+    # smeta_file_url = get_file_url_by_uuid(file_uuid)
+    # print(smeta_file_url)
+
+    values = {
+        "downloadURL": 'http://82.115.43.124:8000/files/download/6594332c-1514-42f6-98d8-6c730d7f9742.pdf',
+        "KzBmg": False,
+        "FaceId":False,
+        "requisites": [{'CompanyName': 'тест тррррр', 'FIO': 'тест два', 'IIN_BIN': '141241241241241', 'PhoneNumber': '+77474078044'}],
+        "contractName": 'тест документ '
+    }
+    print(f'получили ревизиты: \n\n{values}\n\n')
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
+    }
+    url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
+    response = requests.post(url, json=values, headers=headers)
+    print(f'запрос на создание файла получен: {response}, \n{response.text}')
