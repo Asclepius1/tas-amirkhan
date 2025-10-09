@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 
 from fastapi import HTTPException, Response
 
+from merge_files import merge_files
+
 
 dotenv_path = pathlib.Path(__file__).parent /  ".env"
 load_dotenv(dotenv_path=dotenv_path)
@@ -320,10 +322,10 @@ async def trustme_upload_with_file_url(
     url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
     print('check - trustme upload start')
     # #Метод для amo документов 
-    # file_uuid = get_file_uuid_by_lead_id(lead_id)
-    # if not file_uuid:
-    #     return
-    # file_url = get_file_url_by_uuid(file_uuid)
+    file_uuid = get_file_uuid_by_lead_id(lead_id)
+    if not file_uuid:
+        return
+    smeta_file_url = get_file_url_by_uuid(file_uuid)
     # #------------------------
     
     #Метод для amo документов 
@@ -331,8 +333,15 @@ async def trustme_upload_with_file_url(
     doc = get_doc_id_by_f5(lead_id_int)
     doc_id = doc.get('id')
     file_name = doc.get('name')
-    file_url = get_doc_url_by_id(doc_id)
+    file_url = get_doc_url_by_id(doc_id, format='pdf')
     #------------------------
+
+    #Метод для объядинение сметы и договора
+    if file_url and smeta_file_url:
+        file_url = merge_files(file_url, smeta_file_url)
+    #------------------------
+
+
     print(f"\n\n{file_url}\n\n")
     values = {
         "downloadURL": file_url,
@@ -356,6 +365,7 @@ async def trustme_upload_with_file_url(
     if data.get('status') == "Error":
         print(data.get("errorText"))
         return data
+    os.remove(file_url) if file_url.endswith('.pdf') else None # удаляем временный файл если такой есть
     return inserting_data_into_amo(data, lead_id)
 
 
