@@ -342,8 +342,8 @@ async def trustme_upload_with_file_url(
         file_url = f'http://82.115.43.124:8000/files/download/{file_path}'
     #------------------------
 
+    print(f"{'='*10}\n\n{file_url}\n\n{'='*10}")
 
-    print(f"\n\n{file_url}\n\n")
     values = {
         "downloadURL": file_url,
         "KzBmg": False,
@@ -351,14 +351,14 @@ async def trustme_upload_with_file_url(
         "requisites": [get_trustme_data_by_lead_id(lead_id)],
         "contractName": file_name
     }
-    print('получили ревизиты')
+    print(f'получили ревизиты: \n\n{values}\n\n')
     headers = {
         'Content-Type': 'application/json',
         'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
     }
 
     response = requests.post(url, json=values, headers=headers)
-    print(f'запрос на создание файл получен: {response}, \n{response.text}')
+    print(f'запрос на создание файла получен: {response}, \n{response.text}')
     data = response.json()
     if not data:
         print('нету данных для вставки')
@@ -430,37 +430,7 @@ def get_doc_url_by_id(document_id: str, format: str = 'docx'):
         return f'https://docs.google.com/document/export?format={format}&id={id}'
     
 if __name__ == "__main__":
-    # print(trustme_upload_with_file_url('23682805'))
-    # trustme_set_webhook()
-    doc = get_doc_id_by_f5(26231243)
-    doc_id = doc.get('id')
-    print(get_doc_url_by_id(doc_id))  
-    # data = search_lead_by_doc_id("wriuphbzi")
-    # data['_embedded']['leads'][0]['id']
-    # upload_signed_doc_in_lead('23720189', '5tktfq644')
-    # print(get_file_url_by_uuid('1ab735df-dd91-47eb-8c9e-93a4b76204ca'))
-    # upload_file_into_amo_file_data('https://test.trustme.kz/trust_contract_public_apis/doc/DownloadContractFile/xf1ysrkdz')
-    
-    
-    # url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
-    # file_url = 'https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/1e0b7b6a-ef82-4e72-bb0f-a1e5a06c4109/test.docx'
-    # requi = [{'CompanyName': 'тест тррррр', 'FIO': 'тест два', 'IIN_BIN': '141241241241241', 'PhoneNumber': '+77474078044'}]
-
-    # values = {
-    #     "downloadURL": file_url,
-    #     "KzBmg": False,
-    #     "FaceId":False,
-    #     "requisites": requi,
-    #     "contractName": "test"
-    # }
-    # headers = {
-    #     'Content-Type': 'application/json',
-    #     'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
-    # }
-
-    # response = requests.post(url, json=values, headers=headers)
-    # print(f'запрос на создание файл получен: {response}, \n{response.text}')
-    # data = response.json()
-    # print(data)
-    # pass
-    
+    # 26231243
+    file_uuid = get_file_uuid_by_lead_id('26231243')
+    smeta_file_url = get_file_url_by_uuid(file_uuid)
+    print(smeta_file_url)
