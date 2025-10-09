@@ -9,14 +9,14 @@ def download_file(file_url: str, format_: str = 'pdf') -> str|None:
 
     response = requests.get(file_url)
     if response.status_code == 200:
-        file_path = f'{uuid.uuid4()}.{format_}'
+        file_path = f'temp/{uuid.uuid4()}.{format_}'
         # cd = response.headers.get("Content-Disposition", "")
         # filename = None
 
         # match = re.search(r"filename\*\s*=\s*UTF-8''([^;]+)", cd)
         # if match:
             # filename = urllib.parse.unquote(match.group(1)).split('.')[0]
-        with open(f"temp/{file_path}", 'wb') as f:
+        with open(f"{file_path}", 'wb') as f:
             f.write(response.content)
         return file_path
 def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
