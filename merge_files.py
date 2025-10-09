@@ -8,8 +8,8 @@ import pypdf
 def download_file(file_url: str, format_: str = 'pdf') -> str|None:
 
     response = requests.get(file_url)
-
     if response.status_code == 200:
+        file_path = f'temp/{uuid.uuid4()}.{format_}'
         cd = response.headers.get("Content-Disposition", "")
         filename = None
 
@@ -19,8 +19,7 @@ def download_file(file_url: str, format_: str = 'pdf') -> str|None:
             file_path = f'temp/{filename}[{uuid.uuid4()}.{format_}'
             with open(file_path, 'wb') as f:
                 f.write(response.content)
-            return file_path, filename
-
+        return file_path, filename
 def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
     
     doc_file_path, file_name = download_file(doc_file_url)
@@ -42,7 +41,8 @@ def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
 
 if __name__ == "__main__":
     file_url = "https://docs.google.com/document/export?format=pdf&id=1CJ_QIviRUOYnFUkDbkTKfouqr_WUuRrKvKg0lXNUAAc"
-    download_file(file_url)
+    file, _ = download_file('https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/aa7713be-c3f9-4f11-a5ce-c433fa3a4dfb/1-Divine-spetsifikatsiia-zakaza-2025.pdf')
+    print(file)
     # file1 = "temp/Договор на покупку штор тест два.pdf"
     # file2 = "temp/1. Divine спецификация заказа 2025.pdf"
     # reader = pypdf.PdfReader(file2)
