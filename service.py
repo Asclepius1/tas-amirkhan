@@ -337,6 +337,7 @@ async def trustme_upload_with_file_url(
     #------------------------
 
     #Метод для объядинение сметы и договора
+    file_path = None
     if file_url and smeta_file_url:
         file_path = merge_files(file_url, smeta_file_url)
         file_url = f'http://82.115.43.124:8000/files/download/{file_path}'
@@ -366,7 +367,7 @@ async def trustme_upload_with_file_url(
     if data.get('status') == "Error":
         print(data.get("errorText"))
         return data
-    os.remove(file_url) if file_url.endswith('.pdf') else None # удаляем временный файл если такой есть
+    os.remove(f'temp/{file_path}') if file_path is not None else None # удаляем временный файл если такой есть
     return inserting_data_into_amo(data, lead_id)
 
 
