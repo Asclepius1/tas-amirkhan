@@ -339,7 +339,7 @@ async def trustme_upload_with_file_url(
     #Метод для объядинение сметы и договора
     file_path = None
     if file_url and smeta_file_url:
-        file_path = merge_files(file_url, smeta_file_url)
+        file_path = await merge_files(file_url, smeta_file_url)
         file_url = f'http://82.115.43.124:8000/files/download/{file_path}'
     #------------------------
 

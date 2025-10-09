@@ -19,7 +19,8 @@ def download_file(file_url: str, format_: str = 'pdf') -> str|None:
         with open(f"{file_path}", 'wb') as f:
             f.write(response.content)
         return file_path
-def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
+    
+async def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
     
     doc_file_path = download_file(doc_file_url)
     smeta_file_path = download_file(smeta_file_url)
@@ -35,6 +36,7 @@ def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
     writer.write(f"temp/{result_path}")
     os.remove(doc_file_path)
     os.remove(smeta_file_path)
+    print(f"*******Файлы успешно объединены в {result_path}")
     return result_path
 
 
