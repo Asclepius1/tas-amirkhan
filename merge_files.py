@@ -42,15 +42,6 @@ async def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
 
 if __name__ == "__main__":
     file_url = "https://docs.google.com/document/export?format=pdf&id=1CJ_QIviRUOYnFUkDbkTKfouqr_WUuRrKvKg0lXNUAAc"
-    file, _ = download_file('https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/aa7713be-c3f9-4f11-a5ce-c433fa3a4dfb/1-Divine-spetsifikatsiia-zakaza-2025.pdf')
-    print(file)
-    # file1 = "temp/Договор на покупку штор тест два.pdf"
-    # file2 = "temp/1. Divine спецификация заказа 2025.pdf"
-    # reader = pypdf.PdfReader(file2)
-    # writer = pypdf.PdfWriter(file1)
-
-    # for page in reader.pages:
-    #     writer.add_page(page)
-    # file_url = "temp/merged.pdf"
-    # writer.write("temp/merged.pdf")
-    # os.remove(file_url) if file_url.endswith('.pdf') else None
+    file_2_url = 'https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/aa7713be-c3f9-4f11-a5ce-c433fa3a4dfb/1-Divine-spetsifikatsiia-zakaza-2025.pdf'
+    res = merge_files(file_url, file_2_url)
+    print(res)
