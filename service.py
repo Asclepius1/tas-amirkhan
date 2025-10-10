@@ -314,7 +314,7 @@ def get_trustme_data_by_lead_id(lead_id: str) -> dict:
     return data
 
 
-async def trustme_upload_with_file_url(
+def trustme_upload_with_file_url(
         lead_id: str, 
         # file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/c329ce74-0eaf-4b55-a6e2-3c2c81a175b4/DOGOVOR-na-vnedrenie-2.docx"
         ) -> str:
@@ -339,7 +339,7 @@ async def trustme_upload_with_file_url(
     #Метод для объядинение сметы и договора
     file_path = None
     if file_url and smeta_file_url:
-        file_path = await merge_files(file_url, smeta_file_url)
+        file_path = merge_files(file_url, smeta_file_url)
         file_url = f'http://82.115.43.124:8000/files/download/{file_path}'
     #------------------------
 
