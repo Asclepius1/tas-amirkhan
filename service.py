@@ -201,13 +201,13 @@ def upload_signed_doc_in_lead(lead_id: int|str, doc_id:str) -> str|HTTPException
 
 
 
-def tern_off_button(lead_id: str) -> dict:
+def tern_off_button(lead_id: str, field_id: int = 1323805) -> dict:
     url = f"{API_URL_AMO}/api/v4/leads/{lead_id}"
     
     data = {
         "custom_fields_values": [
             {
-                "field_id": 1323805,
+                "field_id": field_id,
                 "values": [
                     {
                         "value": False  # Отключение checkbox
@@ -244,25 +244,32 @@ def parse_nested_keys(data):
     return normalize_nested_keys(result)
 
 
-def get_file_uuid_by_lead_id(lead_id: str) -> str|None:
+def get_file_uuid_by_lead_id(lead_id: str, need_two_files: bool = False) -> list[str]|None:
 
     url = f'{API_URL_AMO}/api/v4/leads/{lead_id}/files'
-    
     response = requests.get(url=url, headers=AMO_HEADER)
     if response.status_code == 200:
         data = response.json()
         first_uuid = data['_embedded']['files'][0].get('file_uuid', '')
-        return first_uuid
+        second_uuid = None
 
-def get_file_url_by_uuid(file_uuid: str) -> str|None:
+        if need_two_files:
+            if len(data['_embedded']['files']) < 2:
+                pass
+            else:
+                second_uuid = data['_embedded']['files'][1].get('file_uuid', '')
+        return [first_uuid, second_uuid]
 
-    url = f'{API_URL_FILE_AMO}/v1.0/files/{file_uuid}'
-    
-    response = requests.get(url, headers=AMO_HEADER)
-    data = response.json()
-    if '_links' in data:
-        file_url = data['_links']['download']['href']
-        return file_url
+def get_file_url_by_uuid(files_uuid: list[str]) -> list[str]|None:
+    files_url = []
+    for file_uuid in files_uuid:
+        url = f'{API_URL_FILE_AMO}/v1.0/files/{file_uuid}'
+        
+        response = requests.get(url, headers=AMO_HEADER)
+        data = response.json()
+        if '_links' in data:
+            files_url.append(data['_links']['download']['href'])
+    return files_url
 
 
 #--------trustme-----------
@@ -272,14 +279,6 @@ def get_trustme_data_by_lead_id(lead_id: str) -> dict:
     contacts_id = raw_data['_embedded']['contacts'][0]['id']
     contacts_data = get_data_from_amo_by_id('contacts', contacts_id)
     # companies_data = get_data_from_amo_by_id('companies', companies_id) 
-
-    # companies_custom_fields = companies_data.get('custom_fields_values', [])
-    # bin_iin_values = [
-    #     v['value']
-    #     for field in companies_custom_fields
-    #     if field.get('field_id') == 1322681
-    #     for v in field.get('values', [])
-    # ]
 
     contacts_custom_fields = contacts_data.get('custom_fields_values', [])
     phone = [
@@ -313,22 +312,20 @@ def get_trustme_data_by_lead_id(lead_id: str) -> dict:
     print(f"Сами реквизиты: {data}")
     return data
 
-
-def trustme_upload_with_file_url(
-        lead_id: str, 
-        # file_url: str = "https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/c329ce74-0eaf-4b55-a6e2-3c2c81a175b4/DOGOVOR-na-vnedrenie-2.docx"
-        ) -> str:
+def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) -> str:
     tern_off_button(lead_id)
+    if several_documents:
+        tern_off_button(lead_id, field_id=1334191)
     url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
     print('check - trustme upload start')
-    # #Метод для amo документов 
-    file_uuid = get_file_uuid_by_lead_id(lead_id)
-    smeta_file_url = None
-    if file_uuid:
-        smeta_file_url = get_file_url_by_uuid(file_uuid)
-    # #------------------------
+    # Метод для amo документов 
+    files_uuid = get_file_uuid_by_lead_id(lead_id, need_two_files=several_documents)
+    amo_files_url = None
+    if files_uuid:
+        amo_files_url = get_file_url_by_uuid(files_uuid)
+    # ------------------------
     
-    #Метод для amo документов 
+    # Метод для amo документов 
     lead_id_int = int(lead_id) 
     doc = get_doc_id_by_f5(lead_id_int)
     doc_id = doc.get('id')
@@ -338,12 +335,10 @@ def trustme_upload_with_file_url(
 
     #Метод для объядинение сметы и договора
     file_path = None
-    if file_url and smeta_file_url:
-        file_path = merge_files(file_url, smeta_file_url)
+    if file_url and amo_files_url:
+        file_path = merge_files(file_url, amo_files_url)
         file_url = f'http://82.115.43.124:8000/files/download/{file_path}'
     #------------------------
-
-    print(f"{'='*10}\n\n{file_url}\n\n{'='*10}")
 
     values = {
         "downloadURL": file_url,
@@ -436,22 +431,4 @@ def get_doc_url_by_id(document_id: str, format: str = 'docx'):
     
 if __name__ == "__main__":
     # 26231243
-    # file_uuid = get_file_uuid_by_lead_id('26231243')
-    # smeta_file_url = get_file_url_by_uuid(file_uuid)
-    # print(smeta_file_url)
-
-    values = {
-        "downloadURL": 'http://82.115.43.124:8000/files/download/6594332c-1514-42f6-98d8-6c730d7f9742.pdf',
-        "KzBmg": False,
-        "FaceId":False,
-        "requisites": [{'CompanyName': 'тест тррррр', 'FIO': 'тест два', 'IIN_BIN': '141241241241241', 'PhoneNumber': '+77474078044'}],
-        "contractName": 'тест документ '
-    }
-    print(f'получили ревизиты: \n\n{values}\n\n')
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
-    }
-    url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
-    response = requests.post(url, json=values, headers=headers)
-    print(f'запрос на создание файла получен: {response}, \n{response.text}')
+    trustme_upload_with_file_url('26231243')

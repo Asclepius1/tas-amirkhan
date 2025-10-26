@@ -14,19 +14,31 @@ def download_file(file_url: str, format_: str = 'pdf') -> str|None:
         with open(f"{file_path}", 'wb') as f:
             f.write(response.content)
         return file_path
-    
-def merge_files(doc_file_url: str, smeta_file_url:str) -> str:
+
+def append_page(writer: pypdf.PdfWriter, reader: pypdf.PdfReader):
+    for page in reader.pages:
+        writer.add_page(page)
+
+def merge_files(doc_file_url: str, amo_files:list[str]) -> str:
     
     doc_file_path = download_file(doc_file_url)
-    smeta_file_path = download_file(smeta_file_url)
+    smeta_file_path = download_file(amo_files[0])
 
     if not doc_file_path or not smeta_file_path:
         raise Exception("Ошибка при загрузке файлов")
     
     reader = pypdf.PdfReader(smeta_file_path)
     writer = pypdf.PdfWriter(doc_file_path)
-    for page in reader.pages:
-        writer.add_page(page)
+    append_page(writer, reader)
+
+    if len(amo_files) > 1:
+        third_file_path = download_file(amo_files[1])
+        if not third_file_path:
+            raise Exception("Ошибка при загрузке третьего файла")
+        third_reader = pypdf.PdfReader(third_file_path)
+        append_page(writer, third_reader)
+        os.remove(third_file_path)
+    
     result_path = f'{uuid.uuid4()}.pdf'
     writer.write(f"temp/{result_path}")
     os.remove(doc_file_path)

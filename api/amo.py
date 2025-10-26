@@ -31,12 +31,18 @@ async def amo_webhook(request: Request, background_tasks: BackgroundTasks):
         data_dict = dict(data)
         structured_data = parse_nested_keys(data_dict)
         custom_fields = structured_data["leads"]["update"][0]["custom_fields"]
+        lead_id = ''
+        several_documents = False
         for d in custom_fields:
             if d['id'] == '1323805':
                 if d['values'][0]['value'] == '1':
                     lead_id = structured_data["leads"]["update"][0]["id"]
-                    background_tasks.add_task(trustme_upload_with_file_url, lead_id)
-                    return JSONResponse(content={"message": "Webhook received successfully"}, status_code=202)
+            if d['id'] == '1334191':
+                if d['values'][0]['value'] == '1':
+                    several_documents = True
+        if lead_id:
+            background_tasks.add_task(trustme_upload_with_file_url, lead_id, several_documents)
+
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
 
 
