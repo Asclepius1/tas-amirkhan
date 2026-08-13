@@ -16,6 +16,16 @@ def setup_logging(level=logging.DEBUG):
     )
     handler.setFormatter(formatter)
     root.addHandler(handler)
+    # Подавление слишком подробных логов от сторонних библиотек
+    noisy_loggers = [
+        'python_multipart.multipart',
+        'urllib3',
+        'asyncio',
+        'uvicorn.access',
+        'uvicorn.error'
+    ]
+    for nl in noisy_loggers:
+        logging.getLogger(nl).setLevel(logging.WARNING)
     return root
 
 

@@ -31,7 +31,9 @@ async def webhook_trustme(request: Request):
         lead_id = lead_data['_embedded']['leads'][0]['id']
 
         if data_dict["status"] == 2: #Заменить на 3 для полной подписи
-            upload_signed_doc_in_lead(lead_id, doc_id)    
+            logger.info('Processing TrustMe webhook for doc_id=%s lead_id=%s status=%s', doc_id, lead_id, data_dict.get('status'))
+            upload_signed_doc_in_lead(lead_id, doc_id)
+            logger.info('upload_signed_doc_in_lead completed for doc_id=%s lead_id=%s', doc_id, lead_id)
             return JSONResponse(content={"message": "successful"}, status_code=200)
         return JSONResponse(content={"message": "successful"}, status_code=202)
         
@@ -62,7 +64,9 @@ async def webhook_trustme_test(contract_id: str, status: int = 3):
         lead_id = lead_data['_embedded']['leads'][0]['id']
 
         if status == 3:
-            upload_signed_doc_in_lead(lead_id, doc_id)    
+            logger.info('Test webhook processing for doc_id=%s lead_id=%s status=%s', doc_id, lead_id, status)
+            upload_signed_doc_in_lead(lead_id, doc_id)
+            logger.info('upload_signed_doc_in_lead completed for test doc_id=%s lead_id=%s', doc_id, lead_id)
             return JSONResponse(content={"message": "successful"}, status_code=200)
         return JSONResponse(content={"message": "successful"}, status_code=200)
         

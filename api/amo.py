@@ -46,6 +46,7 @@ async def amo_webhook(request: Request, background_tasks: BackgroundTasks):
                     several_documents = True
         if lead_id:
             background_tasks.add_task(trustme_upload_with_file_url, lead_id, several_documents)
+            logger.info('Scheduled trustme_upload_with_file_url background task for lead_id=%s several_documents=%s', lead_id, several_documents)
 
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
 

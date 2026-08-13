@@ -196,11 +196,16 @@ def upload_signed_doc_in_lead(lead_id: int|str, doc_id:str) -> str|HTTPException
             },
     }]
     try:
-        response = requests.post(url, headers=AMO_HEADER, json=data)
+        response = requests.post(url, headers=AMO_HEADER, json=data, timeout=30)
+        logger.info('upload_signed_doc_in_lead POST -> status=%s', response.status_code)
         response.raise_for_status()
+        logger.debug('upload_signed_doc_in_lead response: %s', response.text)
         return response.text
-    except requests.exceptions.HTTPError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=f"Ошибка запроса: {exc.response.text}")
+    except requests.exceptions.RequestException as exc:
+        logger.exception('Ошибка при отправке заметки в AMO: %s', exc)
+        status_code = getattr(getattr(exc, 'response', None), 'status_code', 502)
+        detail = getattr(getattr(exc, 'response', None), 'text', str(exc))
+        raise HTTPException(status_code=status_code, detail=f"Ошибка запроса: {detail}")
 
 
 
@@ -252,9 +257,14 @@ def get_file_uuid_by_lead_id(lead_id: str, need_two_files: bool = False) -> list
 
     url = f'{API_URL_AMO}/api/v4/leads/{lead_id}/files'
     response = requests.get(url=url, headers=AMO_HEADER)
+    logger.debug('get_file_uuid_by_lead_id %s -> status=%s', url, response.status_code)
     if response.status_code == 200:
         data = response.json()
-        first_uuid = data['_embedded']['files'][0].get('file_uuid', '')
+        files = data.get('_embedded', {}).get('files', [])
+        if not files:
+            logger.warning('No files embedded for lead_id=%s', lead_id)
+            return [None, None]
+        first_uuid = files[0].get('file_uuid', '')
         second_uuid = None
 
         if need_two_files:
@@ -268,11 +278,17 @@ def get_file_url_by_uuid(files_uuid: list[str]) -> list[str]|None:
     files_url = []
     for file_uuid in files_uuid:
         url = f'{API_URL_FILE_AMO}/v1.0/files/{file_uuid}'
-        
         response = requests.get(url, headers=AMO_HEADER)
-        data = response.json()
+        logger.debug('get_file_url_by_uuid %s -> status=%s', url, response.status_code)
+        try:
+            data = response.json()
+        except ValueError:
+            logger.error('Failed to parse JSON when fetching file url for %s: %s', file_uuid, getattr(response, 'text', None))
+            continue
         if '_links' in data:
             files_url.append(data['_links']['download']['href'])
+        else:
+            logger.warning('No download link for file_uuid=%s response=%s', file_uuid, data)
     return files_url
 
 
@@ -357,9 +373,18 @@ def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) 
         'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
     }
 
-    response = requests.post(url, json=values, headers=headers)
-    logger.debug('запрос на создание файла получен: %s, %s', response, response.text)
-    data = response.json()
+    try:
+        response = requests.post(url, json=values, headers=headers, timeout=30)
+        logger.info('TrustMe POST %s -> status=%s', url, response.status_code)
+    except requests.RequestException as e:
+        logger.exception('Ошибка запроса к TrustMe: %s', e)
+        return JSONResponse(content={"message": "Ошибка при обращении к trustme"}, status_code=502)
+
+    try:
+        data = response.json()
+    except ValueError as e:
+        logger.error('Не удалось распарсить JSON от TrustMe: %s; response_text=%s', e, getattr(response, 'text', None))
+        return JSONResponse(content={"message": "Ошибка парсинга ответа trustme"}, status_code=502)
     if not data:
         logger.warning('нету данных для вставки')
         return JSONResponse(content={"message": "Не получилось получить данные с trustme"}, status_code=500)
