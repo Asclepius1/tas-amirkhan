@@ -2,6 +2,9 @@ from dotenv import load_dotenv
 from requests.exceptions import JSONDecodeError
 
 from fastapi import APIRouter
+from logger_config import get_logger
+
+logger = get_logger(__name__)
 from fastapi.responses import JSONResponse
 from fastapi import Depends, Query, Response, status, Request, HTTPException
 from pydantic import BaseModel
@@ -33,7 +36,7 @@ async def webhook_trustme(request: Request):
         return JSONResponse(content={"message": "successful"}, status_code=202)
         
     except Exception as e:
-        print("Что-то пошло не так при обработке:", str(e))
+        logger.exception('Что-то пошло не так при обработке: %s', e)
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=500)
 
 class ContractUpdate(BaseModel):
@@ -64,5 +67,5 @@ async def webhook_trustme_test(contract_id: str, status: int = 3):
         return JSONResponse(content={"message": "successful"}, status_code=200)
         
     except Exception as e:
-        print("Что-то пошло не так при обработке:", str(e))
+        logger.exception('Что-то пошло не так при обработке: %s', e)
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=500)

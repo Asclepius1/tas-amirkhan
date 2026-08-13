@@ -2,6 +2,9 @@ from dotenv import load_dotenv
 from requests.exceptions import JSONDecodeError
 
 from fastapi import APIRouter
+from logger_config import get_logger
+
+logger = get_logger(__name__)
 from fastapi.responses import JSONResponse
 from fastapi import Depends, Query, Response, status, Request, BackgroundTasks
 
@@ -21,7 +24,8 @@ async def amo_webhook(request: Request):
                 return JSONResponse(content={"message": "Не получилось получить lead_id"}, status_code=404)
         trustme_upload_with_file_url(lead_id)
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
-    except:
+    except Exception as e:
+        logger.exception('Error handling amo_webhook: %s', e)
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=502)
 
 @router.post("/webhook-upload-file")
@@ -46,8 +50,8 @@ async def amo_webhook(request: Request, background_tasks: BackgroundTasks):
         return JSONResponse(content={"message": "Webhook received successfully"}, status_code=200)
 
 
-    except:
+    except Exception as e:
         data = await request.form()
         data_dict = dict(data)
-        print(data_dict)
+        logger.exception('Error handling amo_webhook upload: %s; data=%s', e, data_dict)
         return JSONResponse(content={"message": "Что-то пошло не так при обработке"}, status_code=203)

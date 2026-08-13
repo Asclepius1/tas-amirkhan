@@ -11,6 +11,10 @@ from dotenv import load_dotenv
 
 from fastapi import HTTPException, Response
 
+from logger_config import get_logger
+
+logger = get_logger(__name__)
+
 from merge_files import merge_files
 
 
@@ -67,10 +71,10 @@ def get_data_from_amo_by_id(type: Literal['leads', 'contacts', 'companies'], id:
 
 
 def inserting_data_into_amo(data: dict, lead_id: str) -> str:
-    print(data)
+    logger.debug("inserting_data_into_amo payload: %s", data)
     doc_url = data['data']['url']
     doc_id = data['data']['id']
-    print('начали вставку данных в сделку амо')
+    logger.info('начали вставку данных в сделку амо')
     url = f"{API_URL_AMO}/api/v4/leads/{lead_id}"
     data = {
         "custom_fields_values":[
@@ -93,13 +97,13 @@ def inserting_data_into_amo(data: dict, lead_id: str) -> str:
         ]
     }
     
-    print('запрос отправлен')
+    logger.debug('запрос отправлен')
     try:
         response = requests.patch(url, headers=AMO_HEADER, json=data)
         response.raise_for_status()
         return response.text
     except requests.exceptions.HTTPError as exc:
-        print(f'запрос не дошел успешно {exc.response.text}')
+        logger.error('запрос не дошел успешно %s', exc.response.text)
         raise HTTPException(status_code=exc.response.status_code, detail=f"Ошибка запроса: {exc.response.text}")
 
 
@@ -128,7 +132,7 @@ def upload_file_into_amo_file_data(file_url: str):
     match = re.search(filename_regex, local_file_path)
     if match:
         local_file_path = match.group('filename')
-    print(local_file_path)
+    logger.debug('downloaded file local name: %s', local_file_path)
     response.raise_for_status()
     with open(local_file_path, 'wb') as f:
         for chunk in response.iter_content(chunk_size=8192):
@@ -166,7 +170,7 @@ def upload_file_into_amo_file_data(file_url: str):
     if part_number == 0:
         raise Exception("Файл не был загружен")
 
-    # print(f"Файл {file_name} успешно загружен с session_id {session_id}, uuid = {part_data['uuid']} имя файла = {part_data['name']}")
+    logger.info("Файл %s успешно загружен с session_id %s, uuid = %s имя файла = %s", file_name, session_id, part_data.get('uuid'), part_data.get('name'))
 
     # Удаляем локально сохраненный файл
     os.remove(local_file_path)
@@ -309,7 +313,7 @@ def get_trustme_data_by_lead_id(lead_id: str) -> dict:
         "IIN_BIN": bin_iin_values[0] if bin_iin_values else '',
         "PhoneNumber": format_phone_number(phone[0]) if phone else ''
     }
-    print(f"Сами реквизиты: {data}")
+    logger.debug("Сами реквизиты: %s", data)
     return data
 
 def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) -> str:
@@ -317,7 +321,7 @@ def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) 
     if several_documents:
         tern_off_button(lead_id, field_id=1334191)
     url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
-    print('check - trustme upload start')
+    logger.info('check - trustme upload start')
     # Метод для amo документов 
     files_uuid = get_file_uuid_by_lead_id(lead_id, need_two_files=several_documents)
     amo_files_url = None
@@ -347,26 +351,26 @@ def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) 
         "requisites": [get_trustme_data_by_lead_id(lead_id)],
         "contractName": file_name
     }
-    print(f'получили ревизиты: \n\n{values}\n\n')
+    logger.debug('получили ревизиты: %s', values)
     headers = {
         'Content-Type': 'application/json',
         'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
     }
 
     response = requests.post(url, json=values, headers=headers)
-    print(f'запрос на создание файла получен: {response}, \n{response.text}')
+    logger.debug('запрос на создание файла получен: %s, %s', response, response.text)
     data = response.json()
     if not data:
-        print('нету данных для вставки')
+        logger.warning('нету данных для вставки')
         return JSONResponse(content={"message": "Не получилось получить данные с trustme"}, status_code=500)
     if data.get('status') == "Error":
-        print(data.get("errorText"))
+        logger.error('trustme returned error: %s', data.get('errorText'))
         return data
     if os.path.exists(f'temp/{file_path}'):
         os.remove(f'temp/{file_path}')
-        print("Файл удалён")
+        logger.info("Файл удалён")
     else:
-        print("Файл не найден")
+        logger.warning("Файл не найден")
     return inserting_data_into_amo(data, lead_id)
 
 
@@ -385,8 +389,7 @@ def trustme_set_webhook():
     }
 
     response = requests.post(url, json=values, headers=headers)
-
-    print(response.text)
+    logger.debug(response.text)
     return response.text
 
 def get_custom_fields(lead_id = None):
@@ -413,7 +416,7 @@ def get_doc_id_by_f5(entity_id: int):
         last_doc = documents[-1] if documents else None
         return last_doc
     else:
-        print(f"Ошибка: {response.status_code} - {response.text}")
+        logger.error("Ошибка: %s - %s", response.status_code, response.text)
 
 def get_doc_url_by_id(document_id: str, format: str = 'docx'):
     headers = {
@@ -421,11 +424,11 @@ def get_doc_url_by_id(document_id: str, format: str = 'docx'):
         'Content-Type': 'application/json'
     }
     url = f'{F5_DOCUMENT_URL}/{document_id}'
-    print(url)
+    logger.debug(url)
     response = requests.get(url=f'{F5_DOCUMENT_URL}/{document_id}', headers=headers)
     if response.status_code == 200:
         data:dict = response.json()
-        print(data)
+        logger.debug('get_doc_url_by_id response data: %s', data)
         id = data.get('data').get('document').get('document_id')
         return f'https://docs.google.com/document/export?format={format}&id={id}'
     

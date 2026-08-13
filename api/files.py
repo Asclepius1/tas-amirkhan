@@ -1,6 +1,9 @@
 import re
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
+from logger_config import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/files", tags=["Files"])
 

@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 
 from fastapi import FastAPI
 from api import api_router
+from logger_config import setup_logging
+
+setup_logging()
 
 dotenv_path = pathlib.Path(__file__).parent /  ".env"
 load_dotenv(dotenv_path=dotenv_path)

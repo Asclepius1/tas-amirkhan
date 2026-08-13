@@ -6,6 +6,9 @@ import urllib.parse
 import pypdf
 
 import asyncio
+from logger_config import get_logger
+
+logger = get_logger(__name__)
 
 def download_file(file_url: str, format_: str = 'pdf') -> str|None:
     response = requests.get(file_url)
@@ -43,7 +46,7 @@ def merge_files(doc_file_url: str, amo_files:list[str]) -> str:
     writer.write(f"temp/{result_path}")
     os.remove(doc_file_path)
     os.remove(smeta_file_path)
-    print(f"*******Файлы успешно объединены в {result_path}")
+    logger.info("*******Файлы успешно объединены в %s", result_path)
     return result_path
 
 
@@ -51,4 +54,4 @@ if __name__ == "__main__":
     file_url = "https://docs.google.com/document/export?format=pdf&id=1CJ_QIviRUOYnFUkDbkTKfouqr_WUuRrKvKg0lXNUAAc"
     file_2_url = 'https://drive-b.amocrm.ru/download/21e8a443-5420-54ed-be45-f3d7f3e92e21/aa7713be-c3f9-4f11-a5ce-c433fa3a4dfb/1-Divine-spetsifikatsiia-zakaza-2025.pdf'
     res = merge_files(file_url, file_2_url)
-    print(res)
+    logger.info(res)
