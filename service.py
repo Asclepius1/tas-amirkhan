@@ -340,9 +340,17 @@ def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) 
     logger.info('check - trustme upload start')
     # Метод для amo документов 
     files_uuid = get_file_uuid_by_lead_id(lead_id, need_two_files=several_documents)
+    logger.debug('Retrieved file UUIDs for lead_id=%s: %s', lead_id, files_uuid)
     amo_files_url = None
     if files_uuid:
-        amo_files_url = get_file_url_by_uuid(files_uuid)
+        # фильтруем пустые/None uuid и логируем ситуацию
+        filtered_files_uuid = [u for u in files_uuid if u]
+        if len(filtered_files_uuid) != len(files_uuid):
+            logger.warning('Some file UUIDs were empty for lead_id=%s original=%s filtered=%s', lead_id, files_uuid, filtered_files_uuid)
+        if filtered_files_uuid:
+            amo_files_url = get_file_url_by_uuid(filtered_files_uuid)
+        else:
+            amo_files_url = []
     # ------------------------
     
     # Метод для amo документов 
@@ -353,11 +361,20 @@ def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) 
     file_url = get_doc_url_by_id(doc_id, format='pdf')
     #------------------------
 
-    #Метод для объядинение сметы и договора
+    # Метод для объединения сметы и договора
     file_path = None
     if file_url and amo_files_url:
-        file_path = merge_files(file_url, amo_files_url)
-        file_url = f'http://82.115.43.124:8000/files/download/{file_path}'
+        try:
+            logger.info('Merging files: doc_url=%s amo_files_count=%s', file_url, len(amo_files_url))
+            file_path = merge_files(file_url, amo_files_url)
+            file_url = f'http://82.115.43.124:8000/files/download/{file_path}'
+            logger.info('Merge result file_path=%s', file_path)
+        except Exception as e:
+            logger.exception('Ошибка при объединении файлов для lead_id=%s: %s', lead_id, e)
+            # Продолжаем без объединения — используем исходный file_url если есть
+            file_path = None
+    else:
+        logger.debug('Skipping merge: file_url=%s amo_files_url=%s', file_url, amo_files_url)
     #------------------------
 
     values = {
@@ -367,12 +384,13 @@ def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) 
         "requisites": [get_trustme_data_by_lead_id(lead_id)],
         "contractName": file_name
     }
-    logger.debug('получили ревизиты: %s', values)
+    logger.debug('получили ревизиты summary: contractName=%s downloadURL=%s requisites=%s', file_name, file_url, bool(values.get('requisites')))
     headers = {
         'Content-Type': 'application/json',
         'Authorization': '{}'.format(TRUSTME_BEARER_TOKEN)
     }
-
+    # Логируем предстоящий запрос и отправляем его
+    logger.info('Sending request to TrustMe url=%s payload_keys=%s', url, list(values.keys()))
     try:
         response = requests.post(url, json=values, headers=headers, timeout=30)
         logger.info('TrustMe POST %s -> status=%s', url, response.status_code)
