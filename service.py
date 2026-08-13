@@ -320,7 +320,7 @@ def trustme_upload_with_file_url(lead_id: str, several_documents: bool = False) 
     tern_off_button(lead_id)
     if several_documents:
         tern_off_button(lead_id, field_id=1334191)
-    url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL'
+    url = 'https://test.trustme.kz/trust_contract_public_apis/UploadWithFileURL?auto_sign=1'
     logger.info('check - trustme upload start')
     # Метод для amo документов 
     files_uuid = get_file_uuid_by_lead_id(lead_id, need_two_files=several_documents)
