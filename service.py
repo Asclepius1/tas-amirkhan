@@ -254,25 +254,47 @@ def parse_nested_keys(data):
 
 
 def get_file_uuid_by_lead_id(lead_id: str, need_two_files: bool = False) -> list[str]|None:
-
     url = f'{API_URL_AMO}/api/v4/leads/{lead_id}/files'
-    response = requests.get(url=url, headers=AMO_HEADER)
-    logger.debug('get_file_uuid_by_lead_id %s -> status=%s', url, response.status_code)
-    if response.status_code == 200:
-        data = response.json()
-        files = data.get('_embedded', {}).get('files', [])
-        if not files:
-            logger.warning('No files embedded for lead_id=%s', lead_id)
-            return [None, None]
-        first_uuid = files[0].get('file_uuid', '')
-        second_uuid = None
+    try:
+        response = requests.get(url=url, headers=AMO_HEADER, timeout=15)
+    except requests.RequestException as e:
+        logger.exception('Request error when fetching file uuids for lead_id=%s: %s', lead_id, e)
+        return [None, None]
 
-        if need_two_files:
-            if len(data['_embedded']['files']) < 2:
-                pass
-            else:
-                second_uuid = data['_embedded']['files'][1].get('file_uuid', '')
-        return [first_uuid, second_uuid]
+    logger.debug('get_file_uuid_by_lead_id %s -> status=%s', url, response.status_code)
+    if response.status_code != 200:
+        # log body to help debugging when AMO returns 4xx/5xx
+        logger.error('Non-200 response fetching files for lead_id=%s: status=%s body=%s', lead_id, response.status_code, getattr(response, 'text', None))
+        return [None, None]
+
+    try:
+        data = response.json()
+    except ValueError:
+        logger.exception('Failed to parse JSON response for lead_id=%s: %s', lead_id, getattr(response, 'text', None))
+        return [None, None]
+
+    logger.debug('AMO files payload for lead_id=%s: %s', lead_id, data)
+    files = data.get('_embedded', {}).get('files', [])
+    if not files:
+        logger.warning('No files embedded for lead_id=%s payload=%s', lead_id, data)
+        return [None, None]
+
+    # извлекаем до двух uuid и логируем отсутствие у конкретного файла
+    first_uuid = files[0].get('file_uuid') if isinstance(files[0], dict) else None
+    if not first_uuid:
+        logger.warning('Missing file_uuid in first file entry for lead_id=%s entry=%s', lead_id, files[0])
+
+    second_uuid = None
+    if need_two_files:
+        if len(files) < 2:
+            logger.warning('Requested two files but only %s present for lead_id=%s', len(files), lead_id)
+        else:
+            second_uuid = files[1].get('file_uuid') if isinstance(files[1], dict) else None
+            if not second_uuid:
+                logger.warning('Missing file_uuid in second file entry for lead_id=%s entry=%s', lead_id, files[1])
+
+    logger.debug('Extracted uuids for lead_id=%s: first=%s second=%s', lead_id, first_uuid, second_uuid)
+    return [first_uuid, second_uuid]
 
 def get_file_url_by_uuid(files_uuid: list[str]) -> list[str]|None:
     files_url = []
