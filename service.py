@@ -471,18 +471,24 @@ def get_doc_id_by_f5(entity_id: int):
         'X-Api-Token': f'{F5_DOCUMENT_API}',
         'Content-Type': 'application/json'
     }
-    response = requests.get(url=F5_DOCUMENT_URL, headers=headers)
-    if response.status_code == 200:
-        data:dict = response.json()
-        documents = [
-            doc for doc in data.get("data", {}).get("documents", [])
-            if doc.get("entity_id") == entity_id
-        ]
-        last_doc = documents[-1] if documents else None
-        return last_doc
-    else:
-        logger.error("Ошибка: %s - %s", response.status_code, response.text)
-
+    pages = 15
+    for page in range(pages, 0, -1):
+        params = {
+            'page': page,
+        }
+        response = requests.get(url=F5_DOCUMENT_URL, headers=headers, params=params)
+        if response.status_code == 200:
+            data: dict = response.json()
+            documents = [
+                doc for doc in data.get("data", {}).get("documents", [])
+                if doc.get("entity_id") == entity_id
+            ]
+            last_doc = documents[-1] if documents else None
+            if last_doc:
+                return last_doc
+        else:
+            logger.error("Ошибка: %s - %s", response.status_code, response.text)
+    
 def get_doc_url_by_id(document_id: str, format: str = 'docx'):
     headers = {
         'X-Api-Token': f'{F5_DOCUMENT_API}',
